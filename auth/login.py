@@ -1,6 +1,23 @@
 import streamlit as st
+import re
 from services.supabase_client import supabase
 
+
+# =========================
+# VALIDACIONES
+# =========================
+def email_valido(email):
+    patron = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    return re.match(patron, email)
+
+
+def password_segura(password):
+    return len(password) >= 6
+
+
+# =========================
+# FORMULARIO DE REGISTRO
+# =========================
 def register_form():
     st.subheader("📝 Registro")
 
@@ -10,8 +27,21 @@ def register_form():
     restricciones = st.text_input("Restricciones alimentarias")
 
     if st.button("Registrarse"):
+        # Validaciones básicas
+        if not email_valido(email):
+            st.error("Email no válido")
+            return
+
+        if not password_segura(password):
+            st.error("La contraseña debe tener al menos 6 caracteres")
+            return
+
+        if not objetivo:
+            st.error("El objetivo nutricional es obligatorio")
+            return
+
         try:
-            # 1. Crear usuario en Supabase Auth (password hasheada automáticamente)
+            # 1️⃣ Crear usuario en Supabase Auth
             auth_response = supabase.auth.sign_up({
                 "email": email,
                 "password": password
@@ -19,19 +49,28 @@ def register_form():
 
             user = auth_response.user
 
-            # 2. Crear perfil en la tabla usuarios
+            if user is None:
+                st.error("Error al crear el usuario")
+                return
+
+            # 2️⃣ Crear perfil en tabla usuarios
             supabase.table("usuarios").insert({
-                "id": user.id,
+                "id": user.id,                 # CLAVE: auth.uid()
                 "email": email,
                 "objetivo": objetivo,
                 "restricciones": restricciones
             }).execute()
 
-            st.success("Registro correcto. Ahora puedes iniciar sesión.")
+            st.success("Registro completado correctamente 🎉")
+            st.info("Ahora puedes iniciar sesión")
 
         except Exception as e:
             st.error(f"Error en el registro: {e}")
 
+
+# =========================
+# FORMULARIO DE LOGIN
+# =========================
 def login_form():
     st.subheader("🔐 Login")
 
@@ -45,11 +84,14 @@ def login_form():
                 "password": password
             })
 
-            st.session_state.logged_in = True
-            st.session_state.user = auth_response.user
+            user = auth_response.user
 
-            st.success("Login correcto")
-            st.experimental_rerun()
+            if user:
+                st.session_state.logged_in = True
+                st.session_state.user = user
+                st.experimental_rerun()
+            else:
+                st.error("Credenciales incorrectas")
 
-        except Exception as e:
-            st.error("Email o contraseña incorrectos")
+        except Exception:
+            st.error("Error al iniciar sesión")
