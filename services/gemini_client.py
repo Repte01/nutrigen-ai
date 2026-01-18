@@ -1,51 +1,55 @@
-import google.generativeai as genai
-from dotenv import load_dotenv
-import os
+import requests
+import streamlit as st
 
-# Cargar variables de entorno
-load_dotenv()
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
-# Configurar Gemini con la API Key
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# URL actualizada - usa gemini-1.5-pro o gemini-1.0-pro
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent"
 
-# Usamos Gemini 1.5 Flash (rápido y gratuito)
-model = genai.GenerativeModel("gemini-1.5-flash")
+def gemini_chat(prompt: str) -> str:
+    headers = {
+        'Content-Type': 'application/json',
+    }
+    
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.7,
+            "topK": 1,
+            "topP": 1,
+            "maxOutputTokens": 2048,
+        }
+    }
 
+    try:
+        response = requests.post(
+            f"{URL}?key={API_KEY}",
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
 
-def construir_prompt_nutricional(data: dict) -> str:
-    """
-    Construye un prompt estructurado para generar
-    un plan nutricional semanal personalizado.
-    """
-    return f"""
-Eres un nutricionista profesional.
+        if response.status_code != 200:
+            st.error(f"Error de API: {response.status_code}")
+            st.code(response.text[:500])
+            raise Exception(f"Gemini API error: {response.text}")
 
-Genera un PLAN NUTRICIONAL SEMANAL completo y equilibrado.
-
-Incluye para cada día:
-- Desayuno
-- Comida
-- Cena
-
-Datos del usuario:
-Objetivo principal: {data['objetivo']}
-Restricciones alimentarias: {data['restricciones']}
-Alergias: {data['alergias']}
-Ingredientes disponibles: {data['ingredientes']}
-Observaciones adicionales: {data['observaciones']}
-
-Requisitos:
-- Usa únicamente ingredientes permitidos
-- Evita completamente las alergias
-- Indica calorías aproximadas por comida
-- Da consejos nutricionales breves
-- Usa formato Markdown claro y ordenado
-"""
-
-
-def generar_respuesta(prompt: str) -> str:
-    """
-    Envía el prompt a Gemini y devuelve la respuesta generada.
-    """
-    response = model.generate_content(prompt)
-    return response.text
+        data = response.json()
+        
+        # Extraer el texto de la respuesta
+        if "candidates" in data and len(data["candidates"]) > 0:
+            if "content" in data["candidates"][0]:
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+        
+        # Si la estructura es diferente
+        return str(data)
+        
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error de conexión: {e}")
+        raise Exception(f"Connection error: {e}")
