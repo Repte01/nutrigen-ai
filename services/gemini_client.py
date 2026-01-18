@@ -1,22 +1,37 @@
+import requests
 import streamlit as st
-from google import genai
-from google.genai import types
 
-# Cliente Gemini (SDK NUEVO)
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
 def gemini_chat(prompt: str) -> str:
+    url = (
+        "https://generativelanguage.googleapis.com/v1/models/"
+        f"gemini-pro:generateContent?key={API_KEY}"
+    )
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ]
+    }
+
     try:
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.7,
-                max_output_tokens=1024
-            )
+        response = requests.post(
+            url,
+            json=payload,
+            timeout=60
         )
 
-        return response.text
+        if response.status_code != 200:
+            return f"❌ Error Gemini ({response.status_code}): {response.text}"
+
+        data = response.json()
+
+        return data["candidates"][0]["content"]["parts"][0]["text"]
 
     except Exception as e:
-        return f"❌ Error Gemini: {e}"
+        return f"❌ Error al conectar con Gemini: {e}"
