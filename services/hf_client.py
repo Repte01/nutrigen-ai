@@ -9,7 +9,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-MODEL = "HuggingFaceH4/zephyr-7b-beta"
+MODEL = "HuggingFaceTB/SmolLM3-3B"
 
 def hf_generate(prompt: str) -> str:
     # ✅ URL CORREGIDA
