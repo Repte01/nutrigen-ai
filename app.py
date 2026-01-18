@@ -12,15 +12,18 @@ st.set_page_config(
 )
 
 # ----------------------------------
-# Estado de sesión
+# Estado de sesión (INICIALIZACIÓN SEGURA)
 # ----------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
+if "user" not in st.session_state:
+    st.session_state.user = None
+
 # ----------------------------------
 # LOGIN / REGISTRO
 # ----------------------------------
-if not st.session_state.logged_in:
+if not st.session_state.logged_in or st.session_state.user is None:
     st.title("🥗 NutriGen AI")
     st.subheader("Planes nutricionales con Inteligencia Artificial")
 
@@ -32,7 +35,7 @@ if not st.session_state.logged_in:
     with tab2:
         register_form()
 
-    st.stop()
+    st.stop()  # ⛔ IMPORTANTE: corta aquí si no está logueado
 
 # ----------------------------------
 # APP PRINCIPAL
@@ -40,6 +43,7 @@ if not st.session_state.logged_in:
 st.title("🥗 NutriGen AI")
 st.subheader("Tu asistente nutricional inteligente")
 
+st.sidebar.success(f"👋 Bienvenido/a {st.session_state.user.email}")
 st.sidebar.button("🚪 Cerrar sesión", on_click=logout)
 
 st.sidebar.title("📌 Secciones")
@@ -83,13 +87,15 @@ elif seccion == "🤖 Asistente IA":
 
     if st.button("✨ Generar plan nutricional"):
         if not prompt.strip():
-            st.warning("Escribe algo primero")
+            st.warning("✏️ Escribe algo primero")
         else:
             with st.spinner("🧠 Generando plan..."):
-                respuesta = gemini_chat(prompt)
-
-            st.success("✅ Plan generado")
-            st.markdown(respuesta)
+                try:
+                    respuesta = gemini_chat(prompt)
+                    st.success("✅ Plan generado")
+                    st.markdown(respuesta)
+                except Exception as e:
+                    st.error(f"❌ Error IA: {e}")
 
 # ----------------------------------
 # HÁBITOS SALUDABLES
@@ -98,6 +104,7 @@ elif seccion == "💡 Hábitos saludables":
     st.header("💡 Hábitos saludables")
 
     st.markdown("""
+    ### 🌱 Mejora tu salud día a día
     - 🏃‍♂️ Actividad física regular  
     - 💧 Beber suficiente agua  
     - 😴 Dormir entre 7 y 9 horas  
