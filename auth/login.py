@@ -11,11 +11,14 @@ def register_form():
         submit = st.form_submit_button("Registrarse")
 
     if submit:
-        supabase.auth.sign_up({
-            "email": email,
-            "password": password
-        })
-        st.success("Cuenta creada. Confirma el email.")
+        try:
+            supabase.auth.sign_up({
+                "email": email,
+                "password": password
+            })
+            st.success("✅ Registro correcto. Revisa tu email.")
+        except Exception as e:
+            st.error(f"❌ Error registro: {e}")
 
 
 def login_form():
@@ -27,14 +30,20 @@ def login_form():
         submit = st.form_submit_button("Iniciar sesión")
 
     if submit:
-        res = supabase.auth.sign_in_with_password({
-            "email": email,
-            "password": password
-        })
+        try:
+            auth = supabase.auth.sign_in_with_password({
+                "email": email,
+                "password": password
+            })
 
-        st.session_state.user = res.user
-        st.session_state.logged = True
-        st.rerun()
+            st.session_state.logged_in = True
+            st.session_state.user = auth.user
+
+            st.success("✅ Sesión iniciada")
+            st.rerun()
+
+        except Exception as e:
+            st.error(f"❌ Error login: {e}")
 
 
 def logout():
