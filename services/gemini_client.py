@@ -1,19 +1,26 @@
 import streamlit as st
 import google.generativeai as genai
 
+# Configurar Gemini con la API Key desde Streamlit Secrets
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+# ✅ MODELO CORRECTO
+model = genai.GenerativeModel("models/gemini-1.5-flash")
 
 
 def construir_prompt_nutricional(data: dict) -> str:
     return f"""
 Eres un nutricionista profesional.
 
-Genera un PLAN NUTRICIONAL SEMANAL.
+Genera un PLAN NUTRICIONAL SEMANAL claro y realista.
 
-Incluye desayuno, comida y cena para cada día.
-Indica calorías aproximadas y consejos breves.
+Incluye:
+- Desayuno
+- Comida
+- Cena
+
+Para cada día de la semana.
+Añade calorías aproximadas y consejos breves.
 
 Objetivo: {data['objetivo']}
 Restricciones: {data['restricciones']}
