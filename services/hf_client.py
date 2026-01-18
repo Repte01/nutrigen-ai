@@ -1,3 +1,4 @@
+# services/hf_client.py
 import streamlit as st
 import requests
 
@@ -8,12 +9,12 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# ✅ MODELO GRATUITO Y COMPATIBLE
 MODEL = "HuggingFaceH4/zephyr-7b-beta"
 
 def hf_generate(prompt: str) -> str:
-    url = f"https://router.huggingface.co/hf-inference/models/{MODEL}"
-
+    # ✅ URL CORREGIDA
+    url = f"https://api-inference.huggingface.co/models/{MODEL}"
+    
     payload = {
         "inputs": prompt,
         "parameters": {
@@ -23,7 +24,7 @@ def hf_generate(prompt: str) -> str:
             "return_full_text": False
         }
     }
-
+    
     try:
         response = requests.post(
             url,
@@ -31,16 +32,24 @@ def hf_generate(prompt: str) -> str:
             json=payload,
             timeout=120
         )
-
-        if response.status_code != 200:
+        
+        if response.status_code == 404:
+            return "❌ Error 404: Modelo no encontrado. Verifica la URL y el nombre del modelo."
+        elif response.status_code != 200:
             return f"❌ Error HuggingFace ({response.status_code}): {response.text}"
-
+        
         data = response.json()
-
-        if isinstance(data, list) and "generated_text" in data[0]:
-            return data[0]["generated_text"]
-
+        
+        # Manejar diferentes formatos de respuesta
+        if isinstance(data, list) and len(data) > 0:
+            if "generated_text" in data[0]:
+                return data[0]["generated_text"]
+            elif "generated_text" in data:
+                return data["generated_text"]
+        
         return str(data)
-
+        
+    except requests.exceptions.Timeout:
+        return "❌ Timeout: El modelo está cargando. Intenta de nuevo en 30 segundos."
     except Exception as e:
-        return f"❌ Error de conexión con HuggingFace: {e}"
+        return f"❌ Error de conexión: {str(e)}"
