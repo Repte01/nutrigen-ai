@@ -13,7 +13,7 @@ MODEL = "HuggingFaceH4/zephyr-7b-beta"
 
 def hf_generate(prompt: str) -> str:
     # ✅ URL CORREGIDA
-    url = f"https://api-inference.huggingface.co/models/{MODEL}"
+    url = f"https://router.huggingface.co/models/{MODEL}"
     
     payload = {
         "inputs": prompt,
