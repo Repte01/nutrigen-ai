@@ -1,40 +1,37 @@
+import requests
 import streamlit as st
-import google.generativeai as genai
 
-# Configurar Gemini con la API Key desde Streamlit Secrets
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
-# ✅ MODELO CORRECTO
-model = genai.GenerativeModel("models/gemini-1.5-flash")
-
-
-def construir_prompt_nutricional(data: dict) -> str:
-    return f"""
-Eres un nutricionista profesional.
-
-Genera un PLAN NUTRICIONAL SEMANAL claro y realista.
-
-Incluye:
-- Desayuno
-- Comida
-- Cena
-
-Para cada día de la semana.
-Añade calorías aproximadas y consejos breves.
-
-Objetivo: {data['objetivo']}
-Restricciones: {data['restricciones']}
-Alergias: {data['alergias']}
-Ingredientes disponibles: {data['ingredientes']}
-Observaciones: {data['observaciones']}
-
-Devuelve el resultado en formato Markdown.
-"""
+GEMINI_URL = (
+    "https://generativelanguage.googleapis.com/v1/models/"
+    "gemini-1.5-flash:generateContent"
+)
 
 
-def generar_respuesta(prompt: str) -> str:
-    try:
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"❌ Error con Gemini: {e}"
+def gemini_chat(mensajes):
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": mensajes}]
+            }
+        ]
+    }
+
+    response = requests.post(
+        f"{GEMINI_URL}?key={GEMINI_API_KEY}",
+        headers=headers,
+        json=payload,
+        timeout=30
+    )
+
+    if response.status_code != 200:
+        raise Exception(response.text)
+
+    data = response.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"]
