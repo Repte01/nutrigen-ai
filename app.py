@@ -106,3 +106,21 @@ elif page == "💡 Hábitos saludables":
         - 🧘 Reduce el estrés  
         - ⏰ Mantén horarios regulares  
         """)
+
+
+
+
+
+
+
+
+st.divider()
+st.subheader("🧪 Prueba directa de Gemini")
+
+if st.button("🔍 Probar Gemini"):
+    with st.spinner("Probando conexión con Gemini..."):
+        respuesta = gemini_chat(
+            "Dime un menú saludable sencillo para ganar músculo"
+        )
+        st.success("Gemini respondió correctamente")
+        st.markdown(respuesta)
