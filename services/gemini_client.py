@@ -1,34 +1,49 @@
 import os
-from dotenv import load_dotenv
+import streamlit as st
 import google.generativeai as genai
 
-# Cargar variables de entorno
-load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# -------------------------
+# CONFIGURACIÓN API KEY
+# -------------------------
+GEMINI_API_KEY = None
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+# Streamlit Cloud
+if hasattr(st, "secrets"):
+    GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY")
 
+# Local .env
+if not GEMINI_API_KEY:
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-def construir_prompt_nutricional(data: dict) -> str:
-    return f"""
-Eres un nutricionista profesional.
+if not GEMINI_API_KEY:
+    raise ValueError("❌ GEMINI_API_KEY no encontrada")
 
-Genera un PLAN NUTRICIONAL SEMANAL.
-
-Incluye desayuno, comida y cena para cada día.
-Indica calorías aproximadas y consejos breves.
-
-Objetivo: {data['objetivo']}
-Restricciones: {data['restricciones']}
-Alergias: {data['alergias']}
-Ingredientes disponibles: {data['ingredientes']}
-Observaciones: {data['observaciones']}
-
-Devuelve el resultado en formato Markdown.
-"""
+genai.configure(api_key=GEMINI_API_KEY)
 
 
+# -------------------------
+# MODELO (CORRECTO)
+# -------------------------
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash"
+)
+
+
+# -------------------------
+# FUNCIÓN PRINCIPAL
+# -------------------------
 def generar_respuesta(prompt: str) -> str:
-    response = model.generate_content(prompt)
-    return response.text
+    """
+    Envía un prompt de texto a Gemini y devuelve la respuesta generada.
+    """
+    try:
+        response = model.generate_content(prompt)
+
+        if not response or not response.text:
+            return "❌ Gemini no devolvió respuesta."
+
+        return response.text
+
+    except Exception as e:
+        return f"❌ Error al generar el plan nutricional: {e}"
