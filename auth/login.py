@@ -29,12 +29,19 @@ def register_form():
             })
 
             user = auth_response.user
+            session = auth_response.session
 
-            if user is None:
-                st.error("❌ No se pudo crear el usuario")
+            if user is None or session is None:
+                st.error("❌ No se pudo crear la sesión del usuario")
                 return
 
-            # 2️⃣ Crear perfil en la tabla usuarios
+            # 2️⃣ Establecer sesión ACTIVA (CLAVE DEL PROBLEMA)
+            supabase.auth.set_session(
+                session.access_token,
+                session.refresh_token
+            )
+
+            # 3️⃣ Crear perfil en la tabla usuarios
             supabase.table("usuarios").insert({
                 "id": user.id,
                 "email": email,
@@ -42,7 +49,7 @@ def register_form():
                 "restricciones": restricciones
             }).execute()
 
-            # 3️⃣ Guardar sesión
+            # 4️⃣ Guardar sesión en Streamlit
             st.session_state.user = user
             st.session_state.logged_in = True
 
@@ -72,10 +79,17 @@ def login_form():
             })
 
             user = auth_response.user
+            session = auth_response.session
 
-            if user is None:
+            if user is None or session is None:
                 st.error("❌ Credenciales incorrectas")
                 return
+
+            # Establecer sesión
+            supabase.auth.set_session(
+                session.access_token,
+                session.refresh_token
+            )
 
             st.session_state.user = user
             st.session_state.logged_in = True
