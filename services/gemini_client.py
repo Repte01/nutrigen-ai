@@ -4,7 +4,7 @@ import streamlit as st
 API_KEY = st.secrets["GEMINI_API_KEY"]
 
 # URL actualizada - usa gemini-1.5-pro o gemini-1.0-pro
-URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent"
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent"
 
 def gemini_chat(prompt: str) -> str:
     headers = {
