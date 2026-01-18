@@ -1,95 +1,71 @@
 import streamlit as st
-from auth.login import login_form, register_form
-from services.supabase_client import supabase
-from services.gemini_client import generar_respuesta, construir_prompt_nutricional
+from auth.login import login_form, register_form, logout
+from services.gemini_client import gemini_chat
 
-st.set_page_config(
-    page_title="NutriGen AI",
-    page_icon="🥗",
-    layout="wide"
-)
+st.set_page_config(page_title="NutriGen AI", layout="wide")
 
 st.title("🥗 NutriGen AI")
-st.caption("Planes nutricionales personalizados con Inteligencia Artificial")
+st.caption("Planes nutricionales con IA")
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+if "logged" not in st.session_state:
+    st.session_state.logged = False
 
-if "slide_index" not in st.session_state:
-    st.session_state.slide_index = 0
 
-if not st.session_state.logged_in:
+# ---------------- LOGIN ----------------
+if not st.session_state.logged:
     tab1, tab2 = st.tabs(["🔐 Login", "📝 Registro"])
-
     with tab1:
         login_form()
-
     with tab2:
         register_form()
+    st.stop()
 
-else:
-    user = st.session_state.user
-    st.success(f"Bienvenido/a {user.email}")
 
-    tabs = st.tabs(["🥗 Plan Nutricional", "💡 Consejos de Salud"])
+st.success(f"Bienvenido/a {st.session_state.user.email}")
+st.button("Cerrar sesión", on_click=logout)
 
-    with tabs[0]:
-        st.subheader("📝 Perfil nutricional")
+# ---------------- SLIDES ----------------
+slide = st.radio(
+    "Navegación",
+    ["🥗 Menús saludables", "🤖 Asistente IA", "💡 Hábitos saludables"],
+    horizontal=True
+)
 
-        with st.form("perfil"):
-            objetivo = st.text_input("Objetivo")
-            restricciones = st.text_input("Restricciones")
-            alergias = st.text_input("Alergias")
-            ingredientes = st.text_area("Ingredientes disponibles")
-            observaciones = st.text_area("Observaciones")
+# ---------- SLIDE 1 ----------
+if slide == "🥗 Menús saludables":
+    st.header("🍽️ Ejemplos de menús saludables")
 
-            guardar = st.form_submit_button("Guardar perfil")
+    st.markdown("""
+    **Desayuno:** Avena con fruta y yogur  
+    **Comida:** Pollo con arroz integral y verduras  
+    **Cena:** Pescado al horno con ensalada  
+    """)
 
-        if guardar:
-            supabase.table("usuarios").update({
-                "objetivo": objetivo,
-                "restricciones": restricciones
-            }).eq("id", user.id).execute()
-            st.success("Perfil guardado")
+# ---------- SLIDE 2 ----------
+elif slide == "🤖 Asistente IA":
+    st.header("🤖 Chat nutricional personalizado")
 
-        if st.button("🥗 Generar mi plan nutricional"):
-            with st.spinner("Generando plan nutricional..."):
-                prompt = construir_prompt_nutricional({
-                    "objetivo": objetivo,
-                    "restricciones": restricciones,
-                    "alergias": alergias,
-                    "ingredientes": ingredientes,
-                    "observaciones": observaciones
-                })
-                st.session_state.plan = generar_respuesta(prompt)
+    if "chat" not in st.session_state:
+        st.session_state.chat = ""
 
-        if "plan" in st.session_state:
-            st.markdown(st.session_state.plan)
+    user_input = st.text_area("Cuéntame tus objetivos, restricciones e ingredientes")
 
-    with tabs[1]:
-        slides = [
-            ("🏃 Ejercicio", "30 minutos diarios"),
-            ("💧 Hidratación", "Bebe 2L de agua"),
-            ("😴 Sueño", "Duerme 7-9 horas"),
-            ("🥗 Alimentación", "Prioriza comida real")
-        ]
+    if st.button("Generar plan"):
+        with st.spinner("Generando plan..."):
+            respuesta = gemini_chat(user_input)
+            st.session_state.chat = respuesta
 
-        titulo, texto = slides[st.session_state.slide_index]
-        st.subheader(titulo)
-        st.write(texto)
+    if st.session_state.chat:
+        st.markdown(st.session_state.chat)
 
-        col1, col2 = st.columns(2)
+# ---------- SLIDE 3 ----------
+elif slide == "💡 Hábitos saludables":
+    st.header("🌱 Mejora tu salud")
 
-        with col1:
-            if st.button("⬅️ Anterior") and st.session_state.slide_index > 0:
-                st.session_state.slide_index -= 1
-                st.experimental_rerun()
-
-        with col2:
-            if st.button("Siguiente ➡️") and st.session_state.slide_index < len(slides) - 1:
-                st.session_state.slide_index += 1
-                st.experimental_rerun()
-
-    if st.button("🚪 Cerrar sesión"):
-        st.session_state.clear()
-        st.experimental_rerun()
+    st.markdown("""
+    - 🚶 Caminar 30 min al día  
+    - 🏃 Hacer deporte 3 veces por semana  
+    - 💧 Beber agua suficiente  
+    - 😴 Dormir 7–8 horas  
+    - 🥦 Comer variado y equilibrado  
+    """)
