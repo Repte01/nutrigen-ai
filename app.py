@@ -1,6 +1,6 @@
 import streamlit as st
 from auth.login import login_form, register_form, logout
-from services.hf_client import hf_generate
+from services.gemini_client import gemini_chat
 
 st.set_page_config(
     page_title="NutriGen AI",
@@ -75,8 +75,8 @@ elif page == "🤖 Asistente IA":
     )
 
     if st.button("✨ Generar plan nutricional"):
-        with st.spinner("🧠 Pensando..."):
-            respuesta = hf_generate(prompt)
+        with st.spinner("🧠 Generando plan con IA..."):
+            respuesta = gemini_chat(prompt)
 
         st.success("✅ Plan generado")
         st.markdown(respuesta)
