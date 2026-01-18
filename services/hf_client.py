@@ -13,7 +13,7 @@ MODEL = "HuggingFaceTB/SmolLM3-3B"
 
 def hf_generate(prompt: str, enable_thinking: bool = False) -> str:
     # URL correcta para la API de inferencia
-    url = f"https://api-inference.huggingface.co/models/{MODEL}"
+    url = f"https://router.huggingface.co/models/{MODEL}"
     
     # 🔧 Aprovecha las características del modelo: estructura el prompt para chat
     messages = [
