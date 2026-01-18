@@ -1,37 +1,22 @@
 import os
-import requests
+from google import genai
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-API_URL = "https://api.groq.com/openai/v1/chat/completions"
+if not GEMINI_API_KEY:
+    raise RuntimeError("❌ GEMINI_API_KEY no configurada")
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
 
 def gemini_chat(prompt: str) -> str:
-    if not GROQ_API_KEY:
-        return "❌ Falta la GROQ_API_KEY en los secrets"
+    try:
+        response = client.models.generate_content(
+            model="models/gemini-1.5-flash",
+            contents=prompt
+        )
 
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
+        return response.text
 
-    data = {
-        "model": "llama3-70b-8192",  # ✅ MODELO ACTIVO
-        "messages": [
-            {
-                "role": "system",
-                "content": "Eres un nutricionista profesional y claro en tus explicaciones."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        "temperature": 0.7
-    }
-
-    response = requests.post(API_URL, headers=headers, json=data)
-
-    if response.status_code != 200:
-        return f"❌ Error IA ({response.status_code}): {response.text}"
-
-    return response.json()["choices"][0]["message"]["content"]
+    except Exception as e:
+        raise Exception(f"Error Gemini: {e}")
