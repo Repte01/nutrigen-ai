@@ -1,22 +1,17 @@
 import os
 from google import genai
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not GEMINI_API_KEY:
-    raise RuntimeError("❌ GEMINI_API_KEY no configurada")
-
-client = genai.Client(api_key=GEMINI_API_KEY)
-
-
 def gemini_chat(prompt: str) -> str:
-    try:
-        response = client.models.generate_content(
-            model="models/gemini-1.5-flash",
-            contents=prompt
-        )
+    api_key = os.getenv("GEMINI_API_KEY")
 
-        return response.text
+    if not api_key:
+        raise Exception("❌ GEMINI_API_KEY no encontrada")
 
-    except Exception as e:
-        raise Exception(f"Error Gemini: {e}")
+    client = genai.Client(api_key=api_key)
+
+    response = client.models.generate_content(
+        model="gemini-3-flash-preview",
+        contents=prompt
+    )
+
+    return response.text
