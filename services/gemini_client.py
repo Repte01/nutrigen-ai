@@ -1,29 +1,25 @@
+import os
 import requests
-import streamlit as st
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 def gemini_chat(prompt: str) -> str:
-    api_key = st.secrets.get("GROQ_API_KEY")
-
-    if not api_key:
-        return "❌ No se ha encontrado la GROQ_API_KEY en Secrets."
-
-    url = "https://api.groq.com/openai/v1/chat/completions"
+    if not GROQ_API_KEY:
+        return "❌ Falta la GROQ_API_KEY en los secrets"
 
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
 
-    payload = {
-        "model": "llama3-8b-8192",
+    data = {
+        "model": "llama3-70b-8192",  # ✅ MODELO ACTIVO
         "messages": [
             {
                 "role": "system",
-                "content": (
-                    "Eres un nutricionista profesional. "
-                    "Generas menús saludables, planes semanales, "
-                    "hábitos saludables y consejos claros."
-                )
+                "content": "Eres un nutricionista profesional y claro en tus explicaciones."
             },
             {
                 "role": "user",
@@ -33,7 +29,7 @@ def gemini_chat(prompt: str) -> str:
         "temperature": 0.7
     }
 
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(API_URL, headers=headers, json=data)
 
     if response.status_code != 200:
         return f"❌ Error IA ({response.status_code}): {response.text}"
