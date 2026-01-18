@@ -3,7 +3,7 @@ from services.supabase_client import supabase
 
 
 # -------------------------
-# REGISTRO
+# REGISTRO (SIN SESIÓN)
 # -------------------------
 def register_form():
     st.subheader("📝 Registro")
@@ -11,57 +11,31 @@ def register_form():
     with st.form("register_form"):
         email = st.text_input("Email")
         password = st.text_input("Contraseña", type="password")
-        objetivo = st.text_input("Objetivo nutricional")
-        restricciones = st.text_input("Restricciones alimentarias")
 
         submit = st.form_submit_button("Registrarse")
 
     if submit:
         if not email or not password:
-            st.error("❌ Email y contraseña son obligatorios")
+            st.error("❌ Email y contraseña obligatorios")
             return
 
         try:
-            # 1️⃣ Crear usuario en Supabase Auth
-            auth_response = supabase.auth.sign_up({
+            supabase.auth.sign_up({
                 "email": email,
                 "password": password
             })
 
-            user = auth_response.user
-            session = auth_response.session
-
-            if user is None or session is None:
-                st.error("❌ No se pudo crear la sesión del usuario")
-                return
-
-            # 2️⃣ Establecer sesión ACTIVA (CLAVE DEL PROBLEMA)
-            supabase.auth.set_session(
-                session.access_token,
-                session.refresh_token
+            st.success(
+                "✅ Registro completado. "
+                "Revisa tu email y confirma la cuenta antes de iniciar sesión."
             )
-
-            # 3️⃣ Crear perfil en la tabla usuarios
-            supabase.table("usuarios").insert({
-                "id": user.id,
-                "email": email,
-                "objetivo": objetivo,
-                "restricciones": restricciones
-            }).execute()
-
-            # 4️⃣ Guardar sesión en Streamlit
-            st.session_state.user = user
-            st.session_state.logged_in = True
-
-            st.success("✅ Registro completado correctamente")
-            st.rerun()
 
         except Exception as e:
             st.error(f"❌ Error en el registro: {e}")
 
 
 # -------------------------
-# LOGIN
+# LOGIN (CREA PERFIL SI NO EXISTE)
 # -------------------------
 def login_form():
     st.subheader("🔐 Login")
@@ -82,7 +56,7 @@ def login_form():
             session = auth_response.session
 
             if user is None or session is None:
-                st.error("❌ Credenciales incorrectas")
+                st.error("❌ Credenciales incorrectas o email no confirmado")
                 return
 
             # Establecer sesión
@@ -90,6 +64,19 @@ def login_form():
                 session.access_token,
                 session.refresh_token
             )
+
+            # 🔎 Comprobar si existe perfil
+            profile = supabase.table("usuarios") \
+                .select("id") \
+                .eq("id", user.id) \
+                .execute()
+
+            if not profile.data:
+                # Crear perfil solo la primera vez
+                supabase.table("usuarios").insert({
+                    "id": user.id,
+                    "email": user.email
+                }).execute()
 
             st.session_state.user = user
             st.session_state.logged_in = True
