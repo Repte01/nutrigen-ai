@@ -2,35 +2,48 @@ import os
 import streamlit as st
 import requests
 
-API_TOKEN = st.secrets["HUGGINGFACE_API_TOKEN"]
+# Token desde Streamlit Secrets
+HF_TOKEN = st.secrets["HUGGINGFACE_API_TOKEN"]
 
 HEADERS = {
-    "Authorization": f"Bearer {API_TOKEN}"
+    "Authorization": f"Bearer {HF_TOKEN}",
+    "Content-Type": "application/json"
 }
 
-def hf_generate(prompt: str, model="mistralai/Mistral-7B-Instruct") -> str:
-    url = f"https://api-inference.huggingface.co/models/{model}"
+MODEL = "mistralai/Mistral-7B-Instruct-v0.2"
+
+def hf_generate(prompt: str) -> str:
+    url = f"https://router.huggingface.co/hf-inference/models/{MODEL}"
 
     payload = {
         "inputs": prompt,
         "parameters": {
-            "max_new_tokens": 512
+            "max_new_tokens": 700,
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "return_full_text": False
         }
     }
 
-    response = requests.post(url, headers=HEADERS, json=payload, timeout=100)
+    try:
+        response = requests.post(
+            url,
+            headers=HEADERS,
+            json=payload,
+            timeout=120
+        )
 
-    if response.status_code != 200:
-        return f"❌ Error HuggingFace: {response.status_code} - {response.text}"
+        if response.status_code != 200:
+            return f"❌ Error HuggingFace ({response.status_code}): {response.text}"
 
-    data = response.json()
-    # Puede devolver texto directamente o como lista,
-    # dependiendo del modelo
-    if isinstance(data, list):
-        # Texto en data[0]["generated_text"]
-        return data[0].get("generated_text", "")
-    elif isinstance(data, dict) and "generated_text" in data:
-        return data["generated_text"]
-    else:
-        # Fallback a texto plano
+        data = response.json()
+
+        # Respuesta típica: lista con generated_text
+        if isinstance(data, list) and "generated_text" in data[0]:
+            return data[0]["generated_text"]
+
         return str(data)
+
+    except Exception as e:
+        return f"❌ Error de conexión con HuggingFace: {e}"
+
