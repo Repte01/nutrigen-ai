@@ -1,7 +1,10 @@
-import streamlit as st
+import os
 from supabase import create_client, Client
 
-SUPABASE_URL = st.secrets["SUPABASE_URL"]
-SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("❌ Supabase credentials no configuradas")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
