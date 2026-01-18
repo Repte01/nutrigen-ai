@@ -1,8 +1,6 @@
-import os
 import streamlit as st
 import requests
 
-# Token desde Streamlit Secrets
 HF_TOKEN = st.secrets["HUGGINGFACE_API_TOKEN"]
 
 HEADERS = {
@@ -10,7 +8,8 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-MODEL = "mistralai/Mistral-7B-Instruct-v0.2"
+# ✅ MODELO GRATUITO Y COMPATIBLE
+MODEL = "HuggingFaceH4/zephyr-7b-beta"
 
 def hf_generate(prompt: str) -> str:
     url = f"https://router.huggingface.co/hf-inference/models/{MODEL}"
@@ -18,7 +17,7 @@ def hf_generate(prompt: str) -> str:
     payload = {
         "inputs": prompt,
         "parameters": {
-            "max_new_tokens": 700,
+            "max_new_tokens": 800,
             "temperature": 0.7,
             "top_p": 0.9,
             "return_full_text": False
@@ -38,7 +37,6 @@ def hf_generate(prompt: str) -> str:
 
         data = response.json()
 
-        # Respuesta típica: lista con generated_text
         if isinstance(data, list) and "generated_text" in data[0]:
             return data[0]["generated_text"]
 
@@ -46,4 +44,3 @@ def hf_generate(prompt: str) -> str:
 
     except Exception as e:
         return f"❌ Error de conexión con HuggingFace: {e}"
-
