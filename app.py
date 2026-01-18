@@ -1,108 +1,130 @@
 import streamlit as st
-from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
 
+# -----------------------------
+# Configuración general
+# -----------------------------
 st.set_page_config(
     page_title="NutriGen AI",
     page_icon="🥗",
     layout="wide"
 )
 
+# -----------------------------
+# Cabecera
+# -----------------------------
 st.title("🥗 NutriGen AI")
-st.caption("Tu asistente nutricional inteligente")
+st.subheader("Tu asistente nutricional inteligente")
 
-if "logged" not in st.session_state:
-    st.session_state.logged = False
-
-# ---------- LOGIN ----------
-if not st.session_state.logged:
-    c1, c2 = st.columns(2)
-    with c1:
-        login_form()
-    with c2:
-        register_form()
-    st.stop()
-
-st.success(f"👋 Bienvenido/a **{st.session_state.user.email}**")
-st.button("🚪 Cerrar sesión", on_click=logout)
+st.markdown(
+    """
+    Bienvenido/a a **NutriGen AI**, una aplicación que te ayuda a:
+    - Crear **menús saludables**
+    - Mejorar tus **hábitos de salud**
+    - Generar **planes nutricionales personalizados con IA**
+    """
+)
 
 st.divider()
 
-# ---------- NAVEGACIÓN ----------
-page = st.radio(
-    "📌 Secciones",
-    ["🥗 Menús saludables", "🤖 Asistente IA", "💡 Hábitos saludables"],
-    horizontal=True
+# -----------------------------
+# Navegación lateral
+# -----------------------------
+st.sidebar.title("📌 Secciones")
+
+seccion = st.sidebar.radio(
+    "Ir a:",
+    [
+        "🥗 Menús saludables",
+        "🤖 Asistente IA",
+        "💡 Hábitos saludables"
+    ]
 )
 
-# ================= MENÚS =================
-if page == "🥗 Menús saludables":
-    st.header("🍽️ Menús equilibrados")
+# =========================================================
+# 🥗 MENÚS SALUDABLES
+# =========================================================
+if seccion == "🥗 Menús saludables":
+    st.header("🥗 Menús saludables generales")
 
-    col1, col2 = st.columns(2)
+    st.markdown(
+        """
+        Ejemplos de menús equilibrados y recomendados para una dieta saludable.
+        """
+    )
 
-    with col1:
-        st.subheader("🏃 Menú para energía")
-        st.table({
-            "Comida": ["Desayuno", "Comida", "Cena"],
-            "Plato": [
-                "Avena + fruta",
-                "Pollo con arroz integral",
-                "Pescado con verduras"
-            ]
-        })
+    st.table({
+        "Comida": ["Desayuno", "Comida", "Cena"],
+        "Ejemplo": [
+            "Avena con fruta y yogur",
+            "Pollo a la plancha con arroz y verduras",
+            "Pescado al horno con ensalada"
+        ]
+    })
 
-    with col2:
-        st.subheader("🔥 Menú para adelgazar")
-        st.table({
-            "Comida": ["Desayuno", "Comida", "Cena"],
-            "Plato": [
-                "Yogur + nueces",
-                "Ensalada con legumbres",
-                "Tortilla francesa"
-            ]
-        })
+    st.info(
+        "💡 Estos menús son orientativos y sirven como base para una alimentación equilibrada."
+    )
 
-# ================= CHAT IA =================
-elif page == "🤖 Asistente IA":
+# =========================================================
+# 🤖 ASISTENTE IA
+# =========================================================
+elif seccion == "🤖 Asistente IA":
     st.header("🤖 Nutricionista con IA")
 
-    st.info("Describe tus objetivos, alergias y preferencias")
+    st.markdown(
+        """
+        Describe tus **objetivos**, **alergias**, **restricciones** y preferencias.
+        
+        **Ejemplo**:  
+        *Quiero ganar músculo, soy celíaco y alérgico a las nueces.*
+        """
+    )
 
     prompt = st.text_area(
-        "📝 Ejemplo: Quiero ganar músculo, soy celíaco y alérgico a las nueces",
-        height=150
+        "📝 Tu solicitud",
+        height=150,
+        placeholder="Quiero ganar músculo, soy celíaco y alérgico a las nueces"
     )
 
     if st.button("✨ Generar plan nutricional"):
-        with st.spinner("🧠 Generando plan con IA..."):
-            respuesta = gemini_chat(prompt)
+        if prompt.strip() == "":
+            st.warning("⚠️ Escribe una descripción primero")
+        else:
+            with st.spinner("🧠 Generando plan con IA..."):
+                respuesta = gemini_chat(prompt)
 
-        st.success("✅ Plan generado")
-        st.markdown(respuesta)
+            st.success("✅ Plan generado")
+            st.markdown(respuesta)
 
-# ================= HÁBITOS =================
-elif page == "💡 Hábitos saludables":
-    st.header("🌱 Mejora tu salud día a día")
+# =========================================================
+# 💡 HÁBITOS SALUDABLES
+# =========================================================
+elif seccion == "💡 Hábitos saludables":
+    st.header("💡 Hábitos saludables")
 
-    col1, col2, col3 = st.columns(3)
+    st.markdown(
+        """
+        Algunos hábitos clave para mejorar tu salud general:
+        """
+    )
 
-    with col1:
-        st.metric("🚶 Pasos diarios", "8.000")
-        st.write("Caminar mejora el sistema cardiovascular")
+    st.markdown(
+        """
+        - 🏃‍♂️ **Actividad física regular** (caminar, correr, gimnasio)
+        - 💧 **Buena hidratación** (1.5–2L de agua al día)
+        - 😴 **Dormir bien** (7–9 horas)
+        - 🥦 **Alimentación equilibrada**
+        - 🧘 **Reducir el estrés**
+        """
+    )
 
-    with col2:
-        st.metric("💧 Agua", "2L / día")
-        st.write("Hidratación = mejor rendimiento")
+    st.success(
+        "🌱 Pequeños cambios diarios generan grandes mejoras a largo plazo."
+    )
 
-    with col3:
-        st.metric("😴 Sueño", "7-8h")
-        st.write("Dormir bien regula hormonas")
-
-    with st.expander("📚 Consejos extra"):
-        st.markdown("""
-        - 🏃 Haz deporte 3 veces por semana  
-        - 🥦 Come variado  
-        - 🧘 Reduce el estrés  
-        - ⏰ Mantén horarios regulares  
-        """)
+# -----------------------------
+# Footer
+# -----------------------------
+st.divider()
+st.caption("NutriGen AI · Proyecto educativo · IA aplicada a la nutrición")
