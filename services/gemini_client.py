@@ -3,35 +3,36 @@ import streamlit as st
 
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
-GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1/models/"
-    "gemini-1.5-flash:generateContent"
+API_URL = (
+    "https://generativelanguage.googleapis.com/"
+    "v1beta/models/gemini-1.5-flash:generateContent"
 )
 
 
-def gemini_chat(mensajes):
+def gemini_chat(prompt: str) -> str:
     headers = {
         "Content-Type": "application/json"
     }
 
-    payload = {
+    body = {
         "contents": [
             {
-                "role": "user",
-                "parts": [{"text": mensajes}]
+                "parts": [
+                    {"text": prompt}
+                ]
             }
         ]
     }
 
     response = requests.post(
-        f"{GEMINI_URL}?key={GEMINI_API_KEY}",
+        f"{API_URL}?key={GEMINI_API_KEY}",
         headers=headers,
-        json=payload,
+        json=body,
         timeout=30
     )
 
     if response.status_code != 200:
-        raise Exception(response.text)
+        raise Exception(f"Gemini API error: {response.text}")
 
     data = response.json()
     return data["candidates"][0]["content"]["parts"][0]["text"]
