@@ -1,16 +1,16 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
-# Configurar API Key
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-# ⚠️ MODELO COMPATIBLE
-model = genai.GenerativeModel("gemini-pro")
+# Crear cliente oficial (SDK NUEVO)
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 
 def gemini_chat(prompt: str) -> str:
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-1.5-pro",
+            contents=prompt
+        )
         return response.text
     except Exception as e:
-        raise Exception(f"Error Gemini SDK: {e}")
+        raise Exception(f"Error Gemini API: {e}")
