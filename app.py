@@ -1,6 +1,7 @@
 import streamlit as st
 from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
+from services.planes_service import guardar_plan, obtener_planes_usuario
 
 # ----------------------------------
 # Configuración
@@ -37,6 +38,9 @@ if not st.session_state.logged_in:
 # ----------------------------------
 # APP PRINCIPAL
 # ----------------------------------
+user = st.session_state.user
+user_id = user.id
+
 st.title("🥗 NutriGen AI")
 st.subheader("Tu asistente nutricional inteligente")
 
@@ -48,6 +52,7 @@ seccion = st.sidebar.radio(
     [
         "🥗 Menús saludables",
         "🤖 Asistente IA",
+        "📜 Mis planes",
         "💡 Hábitos saludables"
     ]
 )
@@ -57,158 +62,129 @@ seccion = st.sidebar.radio(
 # ======================================================
 if seccion == "🥗 Menús saludables":
     st.header("🥗 Menús saludables")
-    st.write("Ejemplos de menús equilibrados para el día a día.")
+    st.info("Ejemplos orientativos para el día a día.")
 
     desayuno, comida, cena = st.tabs(["🍳 Desayunos", "🍛 Comidas", "🍽️ Cenas"])
 
     with desayuno:
-        st.table({
-            "Opción": ["Avena con fruta", "Tostadas integrales", "Yogur natural"],
-            "Beneficio": [
-                "Energía sostenida",
-                "Rico en fibra",
-                "Salud digestiva"
-            ]
-        })
+        st.markdown("""
+        - 🥣 Avena con fruta y semillas  
+        - 🍞 Tostadas integrales con aguacate  
+        - 🥛 Yogur natural con nueces
+        """)
 
     with comida:
-        st.table({
-            "Plato": [
-                "Pollo con arroz y verduras",
-                "Lentejas con verduras",
-                "Pasta integral con atún"
-            ],
-            "Aporte principal": [
-                "Proteína + carbohidratos",
-                "Proteína vegetal",
-                "Energía y saciedad"
-            ]
-        })
+        st.markdown("""
+        - 🍗 Pollo con arroz y verduras  
+        - 🥬 Lentejas con verduras  
+        - 🍝 Pasta integral con atún
+        """)
 
     with cena:
-        st.table({
-            "Cena ligera": [
-                "Pescado al horno con ensalada",
-                "Tortilla francesa con espinacas",
-                "Crema de verduras"
-            ],
-            "Ideal para": [
-                "Recuperación muscular",
-                "Cena rápida",
-                "Digestión ligera"
-            ]
-        })
-
-    st.info("💡 Consejo: ajusta las cantidades según tu objetivo y nivel de actividad.")
+        st.markdown("""
+        - 🐟 Pescado al horno  
+        - 🍳 Tortilla con espinacas  
+        - 🥕 Crema de verduras
+        """)
 
 # ======================================================
 # 🤖 ASISTENTE IA
 # ======================================================
 elif seccion == "🤖 Asistente IA":
     st.header("🤖 Nutricionista con IA")
-    st.write("Configura tu plan nutricional de forma visual y personalizada.")
 
     col1, col2 = st.columns(2)
 
     with col1:
         objetivo = st.selectbox(
-            "🎯 Objetivo principal",
+            "🎯 Objetivo",
             [
                 "Ganar masa muscular",
                 "Perder grasa",
                 "Mantener peso",
-                "Mejorar salud general",
-                "Rendimiento deportivo"
+                "Mejorar salud general"
             ]
         )
 
         implicacion = st.slider(
             "⚖️ Nivel de implicación",
-            min_value=1,
-            max_value=3,
-            value=2,
-            format="%d",
-            help="1 = Poco estricto · 3 = Muy estricto"
+            1, 3, 2
         )
 
         alergias = st.multiselect(
             "🚫 Alergias",
-            ["Nueces", "Gluten", "Lactosa", "Huevo", "Marisco"]
+            ["Gluten", "Lactosa", "Huevo", "Marisco", "Frutos secos"]
         )
 
         restricciones = st.multiselect(
-            "🥦 Restricciones alimentarias",
-            ["Vegetariano", "Vegano", "Sin gluten", "Sin lactosa", "Keto"]
+            "🥦 Restricciones",
+            ["Vegetariano", "Vegano", "Keto", "Sin gluten"]
         )
 
     with col2:
         observaciones = st.text_area(
-            "📝 Información adicional",
-            placeholder="Ej: entreno 4 días por semana, poco tiempo para cocinar...",
-            height=180
+            "📝 Observaciones adicionales",
+            height=200
         )
 
     prompt = f"""
 Eres un nutricionista profesional.
 
-Genera un plan nutricional claro y práctico.
-
 Objetivo: {objetivo}
 Nivel de implicación: {implicacion}/3
 Alergias: {', '.join(alergias) if alergias else 'Ninguna'}
 Restricciones: {', '.join(restricciones) if restricciones else 'Ninguna'}
-Observaciones adicionales: {observaciones if observaciones else 'Ninguna'}
+Observaciones: {observaciones if observaciones else 'Ninguna'}
 
-Incluye:
-- Menú orientativo
-- Calorías aproximadas
-- Consejos prácticos
+Genera un plan claro, práctico y realista.
 """
 
-    st.markdown("### 📄 Prompt generado automáticamente")
     st.code(prompt)
 
-    if st.button("✨ Generar plan nutricional con IA"):
-        with st.spinner("🧠 Pensando como un nutricionista..."):
+    if st.button("✨ Generar plan nutricional"):
+        with st.spinner("Generando plan..."):
             respuesta = gemini_chat(prompt)
 
-        st.success("✅ Plan generado")
+        guardar_plan(
+            user_id,
+            objetivo,
+            implicacion,
+            alergias,
+            restricciones,
+            prompt,
+            respuesta
+        )
+
+        st.success("✅ Plan guardado")
         st.markdown(respuesta)
+
+# ======================================================
+# 📜 MIS PLANES
+# ======================================================
+elif seccion == "📜 Mis planes":
+    st.header("📜 Mis planes nutricionales")
+
+    planes = obtener_planes_usuario(user_id)
+
+    if not planes:
+        st.info("Aún no has generado ningún plan.")
+    else:
+        for plan in planes:
+            with st.expander(f"🗓️ {plan['created_at']} — {plan['objetivo']}"):
+                st.markdown(plan["respuesta_ia"])
 
 # ======================================================
 # 💡 HÁBITOS SALUDABLES
 # ======================================================
 elif seccion == "💡 Hábitos saludables":
     st.header("💡 Hábitos saludables")
-    st.write("Pequeñas acciones diarias que mejoran tu salud.")
 
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.subheader("🏃 Actividad física")
-        st.markdown("""
-        - Caminar 30 min diarios  
-        - Entrenar fuerza 2-3 veces/semana  
-        - Estiramientos
-        """)
-
-    with col2:
-        st.subheader("💧 Hidratación")
-        st.markdown("""
-        - 1.5–2L de agua al día  
-        - Evitar refrescos  
-        - Agua antes de las comidas
-        """)
-
-    with col3:
-        st.subheader("😴 Descanso")
-        st.markdown("""
-        - Dormir 7–9 horas  
-        - Rutina de sueño  
-        - Evitar pantallas antes de dormir
-        """)
-
-    st.success("🌱 La constancia vale más que la perfección.")
+    st.markdown("""
+    - 🏃 Actividad física regular  
+    - 💧 Hidratación diaria  
+    - 😴 Dormir 7–9 horas  
+    - 🧘 Reducir estrés
+    """)
 
 # ----------------------------------
-st.caption("NutriGen AI · Proyecto educativo · IA aplicada a la nutrición")
+st.caption("NutriGen AI · Proyecto educativo")
