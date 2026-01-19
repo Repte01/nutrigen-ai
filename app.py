@@ -2,6 +2,7 @@ import streamlit as st
 from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
 from services.chat_service import save_chat, get_chat_history
+from services.pdf_service import generar_pdf_chat
 
 # ----------------------------------
 # Configuración
@@ -195,8 +196,21 @@ Incluye:
             with st.expander(f"🗓 {chat['created_at']}"):
                 st.markdown("**🧑 Prompt enviado:**")
                 st.code(chat["prompt"])
+                
                 st.markdown("**🤖 Respuesta IA:**")
                 st.markdown(chat["respuesta"])
+                
+                pdf_buffer = generar_pdf_chat(
+                    prompt=chat["prompt"],
+                    respuesta=chat["respuesta"]
+                )
+                
+                st.download_button(
+                    label="📄 Exportar a PDF",
+                    data=pdf_buffer,
+                    file_name=f"nutrigen_plan_{chat['created_at']}.pdf",
+                    mime="application/pdf"
+                )
 
 # ======================================================
 # 💡 HÁBITOS SALUDABLES
