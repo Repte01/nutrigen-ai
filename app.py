@@ -1,6 +1,7 @@
 import streamlit as st
 from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
+from services.chat_service import save_chat, get_chat_history
 
 # ----------------------------------
 # Configuración
@@ -172,8 +173,30 @@ Incluye:
         with st.spinner("🧠 Pensando como un nutricionista..."):
             respuesta = gemini_chat(prompt)
 
+            save_chat(
+                user_id=st.session_state.user.id,
+                prompt=prompt,
+                respuesta=respuesta
+            )
+
         st.success("✅ Plan generado")
         st.markdown(respuesta)
+
+    # -------- HISTORIAL DE CHATS --------
+    st.divider()
+    st.subheader("🕒 Historial de conversaciones")
+
+    historial = get_chat_history(st.session_state.user.id)
+
+    if not historial:
+        st.info("Aún no tienes conversaciones guardadas.")
+    else:
+        for chat in historial:
+            with st.expander(f"🗓 {chat['created_at']}"):
+                st.markdown("**🧑 Prompt enviado:**")
+                st.code(chat["prompt"])
+                st.markdown("**🤖 Respuesta IA:**")
+                st.markdown(chat["respuesta"])
 
 # ======================================================
 # 💡 HÁBITOS SALUDABLES
