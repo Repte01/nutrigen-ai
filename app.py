@@ -59,49 +59,74 @@ seccion = st.sidebar.radio(
 # ======================================================
 if seccion == "🥗 Menús saludables":
     st.header("🥗 Menús saludables")
-    st.write("Ejemplos de menús equilibrados para el día a día.")
+    st.write("Ideas prácticas y equilibradas para organizar tus comidas.")
 
-    desayuno, comida, cena = st.tabs(["🍳 Desayunos", "🍛 Comidas", "🍽️ Cenas"])
+    objetivo_menu = st.selectbox(
+        "🎯 Filtrar según objetivo",
+        ["General", "Pérdida de grasa", "Ganancia muscular", "Salud general"]
+    )
 
-    with desayuno:
-        st.table({
-            "Opción": ["Avena con fruta", "Tostadas integrales", "Yogur natural"],
-            "Beneficio": [
-                "Energía sostenida",
-                "Rico en fibra",
-                "Salud digestiva"
-            ]
-        })
+    st.subheader("📅 Ejemplo de menú diario")
 
-    with comida:
-        st.table({
-            "Plato": [
-                "Pollo con arroz y verduras",
-                "Lentejas con verduras",
-                "Pasta integral con atún"
-            ],
-            "Aporte principal": [
-                "Proteína + carbohidratos",
-                "Proteína vegetal",
-                "Energía y saciedad"
-            ]
-        })
+    st.markdown("""
+**🥣 Desayuno**
+- Avena con fruta y semillas  
+- Café o té sin azúcar  
 
-    with cena:
-        st.table({
-            "Cena ligera": [
-                "Pescado al horno con ensalada",
-                "Tortilla francesa con espinacas",
-                "Crema de verduras"
-            ],
-            "Ideal para": [
-                "Recuperación muscular",
-                "Cena rápida",
-                "Digestión ligera"
-            ]
-        })
+**🍎 Media mañana**
+- Yogur natural + frutos secos  
 
-    st.info("💡 Consejo: ajusta las cantidades según tu objetivo y nivel de actividad.")
+**🍛 Comida**
+- Pollo a la plancha  
+- Arroz integral  
+- Verduras salteadas  
+
+**🥪 Merienda**
+- Tostada integral con aguacate  
+
+**🍽️ Cena**
+- Pescado al horno  
+- Ensalada verde
+""")
+
+    st.divider()
+    st.subheader("🍽️ Tipos de menú")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("### 🟢 Menú ligero")
+        st.write("Ideal para cenas o días de descanso.")
+        st.markdown("""
+- Cremas de verduras  
+- Pescado blanco  
+- Yogur natural  
+""")
+
+    with col2:
+        st.markdown("### 🔵 Menú equilibrado")
+        st.write("Perfecto para el día a día.")
+        st.markdown("""
+- Proteína + carbohidrato  
+- Verduras  
+- Grasas saludables  
+""")
+
+    with col3:
+        st.markdown("### 🔴 Menú alto en proteína")
+        st.write("Enfocado a ganancia muscular.")
+        st.markdown("""
+- Carnes magras  
+- Legumbres  
+- Huevos / tofu  
+""")
+
+    st.info("""
+💡 **Consejos prácticos**
+- Ajusta cantidades, no alimentos  
+- Prioriza comida real  
+- La constancia es más importante que la perfección  
+""")
 
 # ======================================================
 # 🤖 ASISTENTE IA
@@ -129,7 +154,6 @@ elif seccion == "🤖 Asistente IA":
             min_value=1,
             max_value=3,
             value=2,
-            format="%d",
             help="1 = Poco estricto · 3 = Muy estricto"
         )
 
@@ -183,7 +207,7 @@ Incluye:
         st.success("✅ Plan generado")
         st.markdown(respuesta)
 
-    # -------- HISTORIAL DE CHATS --------
+    # -------- HISTORIAL --------
     st.divider()
     st.subheader("🕒 Historial de conversaciones")
 
@@ -194,31 +218,19 @@ Incluye:
     else:
         for chat in historial:
             titulo = chat.get("titulo") or "Plan nutricional"
-            
+
             with st.expander(f"🗂 {titulo} · {chat['created_at']}"):
-                
-                nuevo_titulo = st.text_input(
-                    "✏️ Renombrar conversación",
-                    value=titulo,
-                    key=f"titulo_{chat['id']}"
-                )
-
-                if nuevo_titulo != titulo:
-                    update_chat_title(chat["id"], nuevo_titulo)
-                    st.success("✅ Nombre actualizado")
-                    st.rerun()
-
-                st.markdown("**🧑 Prompt enviado:**")
+                st.markdown("**🧑 Prompt:**")
                 st.code(chat["prompt"])
-                
+
                 st.markdown("**🤖 Respuesta IA:**")
                 st.markdown(chat["respuesta"])
-                
+
                 pdf_buffer = generar_pdf_chat(
                     prompt=chat["prompt"],
                     respuesta=chat["respuesta"]
                 )
-                
+
                 st.download_button(
                     label="📄 Exportar a PDF",
                     data=pdf_buffer,
@@ -231,35 +243,44 @@ Incluye:
 # ======================================================
 elif seccion == "💡 Hábitos saludables":
     st.header("💡 Hábitos saludables")
-    st.write("Pequeñas acciones diarias que mejoran tu salud.")
+    st.write("Pequeñas acciones diarias que generan grandes cambios.")
 
-    col1, col2, col3 = st.columns(3)
+    st.subheader("🌱 Hábitos clave")
 
-    with col1:
-        st.subheader("🏃 Actividad física")
-        st.markdown("""
-        - Caminar 30 min diarios  
-        - Entrenar fuerza 2-3 veces/semana  
-        - Estiramientos
-        """)
+    st.markdown("""
+### 🍽️ Alimentación
+- Come despacio  
+- Evita pantallas al comer  
+- Prioriza saciedad  
 
-    with col2:
-        st.subheader("💧 Hidratación")
-        st.markdown("""
-        - 1.5–2L de agua al día  
-        - Evitar refrescos  
-        - Agua antes de las comidas
-        """)
+### 🏃 Movimiento
+- 8.000–10.000 pasos diarios  
+- Fuerza 2–3 veces/semana  
+- Muévete aunque no entrenes  
 
-    with col3:
-        st.subheader("😴 Descanso")
-        st.markdown("""
-        - Dormir 7–9 horas  
-        - Rutina de sueño  
-        - Evitar pantallas antes de dormir
-        """)
+### 😴 Descanso
+- Dormir 7–9 horas  
+- Rutina estable  
+- Cena ligera  
 
-    st.success("🌱 La constancia vale más que la perfección.")
+### 🧠 Salud mental
+- Respiración consciente  
+- Menos estrés  
+- Constancia > perfección  
+""")
+
+    st.divider()
+    st.subheader("✅ Checklist diario")
+
+    agua = st.checkbox("💧 He bebido suficiente agua")
+    movimiento = st.checkbox("🏃 Me he movido al menos 30 minutos")
+    descanso = st.checkbox("😴 He dormido bien")
+    comida = st.checkbox("🥗 He comido consciente")
+
+    if agua and movimiento and descanso and comida:
+        st.success("🔥 Día saludable completado. ¡Buen trabajo!")
+
+    st.markdown("> 🌟 *No busques hacerlo perfecto, busca hacerlo sostenible.*")
 
 # ----------------------------------
 st.caption("NutriGen AI · Proyecto educativo · IA aplicada a la nutrición")
