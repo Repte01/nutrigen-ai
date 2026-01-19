@@ -193,7 +193,21 @@ Incluye:
         st.info("Aún no tienes conversaciones guardadas.")
     else:
         for chat in historial:
-            with st.expander(f"🗓 {chat['created_at']}"):
+            titulo = chat.get("titulo") or "Plan nutricional"
+            
+            with st.expander(f"🗂 {titulo} · {chat['created_at']}"):
+                
+                nuevo_titulo = st.text_input(
+                    "✏️ Renombrar conversación",
+                    value=titulo,
+                    key=f"titulo_{chat['id']}"
+                )
+
+                if nuevo_titulo != titulo:
+                    update_chat_title(chat["id"], nuevo_titulo)
+                    st.success("✅ Nombre actualizado")
+                    st.rerun()
+
                 st.markdown("**🧑 Prompt enviado:**")
                 st.code(chat["prompt"])
                 
