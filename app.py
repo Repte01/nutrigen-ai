@@ -1,7 +1,7 @@
 import streamlit as st
 from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
-from services.chat_service import save_chat, get_chat_history
+from services.chat_service import save_chat, get_chat_history, update_chat_title
 from services.pdf_service import generar_pdf_chat
 
 # ----------------------------------
