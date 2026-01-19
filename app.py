@@ -3,47 +3,19 @@ from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
 
 # ----------------------------------
-# CONFIG + TEMA OSCURO
+# Configuración
 # ----------------------------------
 st.set_page_config(
     page_title="NutriGen AI",
     page_icon="🥗",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-st.markdown("""
-<style>
-body {
-    background-color: #0e1117;
-    color: #fafafa;
-}
-.metric-card {
-    background-color: #161b22;
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
-}
-.metric-title {
-    font-size: 14px;
-    color: #8b949e;
-}
-.metric-value {
-    font-size: 28px;
-    color: #2ecc71;
-    font-weight: bold;
-}
-</style>
-""", unsafe_allow_html=True)
-
 # ----------------------------------
-# ESTADO GLOBAL
+# Estado de sesión
 # ----------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-
-if "historial_planes" not in st.session_state:
-    st.session_state.historial_planes = []
 
 # ----------------------------------
 # LOGIN / REGISTRO
@@ -74,164 +46,169 @@ st.sidebar.title("📌 Secciones")
 seccion = st.sidebar.radio(
     "Ir a:",
     [
-        "📊 Dashboard",
-        "🤖 Asistente IA",
-        "📚 Historial",
         "🥗 Menús saludables",
+        "🤖 Asistente IA",
         "💡 Hábitos saludables"
     ]
 )
 
 # ======================================================
-# 📊 DASHBOARD
+# 🥗 MENÚS SALUDABLES
 # ======================================================
-if seccion == "📊 Dashboard":
-    st.header("📊 Tu progreso")
+if seccion == "🥗 Menús saludables":
+    st.header("🥗 Menús saludables")
+    st.write("Ejemplos de menús equilibrados para el día a día.")
 
-    col1, col2, col3 = st.columns(3)
+    desayuno, comida, cena = st.tabs(["🍳 Desayunos", "🍛 Comidas", "🍽️ Cenas"])
 
-    with col1:
-        st.markdown("""
-        <div class="metric-card">
-            <div class="metric-title">Planes generados</div>
-            <div class="metric-value">{}</div>
-        </div>
-        """.format(len(st.session_state.historial_planes)), unsafe_allow_html=True)
+    with desayuno:
+        st.table({
+            "Opción": ["Avena con fruta", "Tostadas integrales", "Yogur natural"],
+            "Beneficio": [
+                "Energía sostenida",
+                "Rico en fibra",
+                "Salud digestiva"
+            ]
+        })
 
-    with col2:
-        objetivo_actual = (
-            st.session_state.historial_planes[-1]["objetivo"]
-            if st.session_state.historial_planes else "—"
-        )
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Último objetivo</div>
-            <div class="metric-value">{objetivo_actual}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    with comida:
+        st.table({
+            "Plato": [
+                "Pollo con arroz y verduras",
+                "Lentejas con verduras",
+                "Pasta integral con atún"
+            ],
+            "Aporte principal": [
+                "Proteína + carbohidratos",
+                "Proteína vegetal",
+                "Energía y saciedad"
+            ]
+        })
 
-    with col3:
-        nivel = (
-            st.session_state.historial_planes[-1]["implicacion"]
-            if st.session_state.historial_planes else "—"
-        )
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Implicación</div>
-            <div class="metric-value">{nivel}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    with cena:
+        st.table({
+            "Cena ligera": [
+                "Pescado al horno con ensalada",
+                "Tortilla francesa con espinacas",
+                "Crema de verduras"
+            ],
+            "Ideal para": [
+                "Recuperación muscular",
+                "Cena rápida",
+                "Digestión ligera"
+            ]
+        })
 
-    st.divider()
-    st.info("📈 El progreso se basa en constancia y generación de planes.")
+    st.info("💡 Consejo: ajusta las cantidades según tu objetivo y nivel de actividad.")
 
 # ======================================================
 # 🤖 ASISTENTE IA
 # ======================================================
 elif seccion == "🤖 Asistente IA":
     st.header("🤖 Nutricionista con IA")
+    st.write("Configura tu plan nutricional de forma visual y personalizada.")
 
     col1, col2 = st.columns(2)
 
     with col1:
         objetivo = st.selectbox(
-            "🎯 Objetivo",
+            "🎯 Objetivo principal",
             [
                 "Ganar masa muscular",
                 "Perder grasa",
                 "Mantener peso",
-                "Mejorar salud",
+                "Mejorar salud general",
                 "Rendimiento deportivo"
             ]
         )
 
         implicacion = st.slider(
             "⚖️ Nivel de implicación",
-            1, 3, 2,
-            help="1 = flexible · 3 = muy estricto"
+            min_value=1,
+            max_value=3,
+            value=2,
+            format="%d",
+            help="1 = Poco estricto · 3 = Muy estricto"
         )
 
         alergias = st.multiselect(
             "🚫 Alergias",
-            ["Gluten", "Lactosa", "Huevo", "Nueces", "Marisco"]
+            ["Nueces", "Gluten", "Lactosa", "Huevo", "Marisco"]
+        )
+
+        restricciones = st.multiselect(
+            "🥦 Restricciones alimentarias",
+            ["Vegetariano", "Vegano", "Sin gluten", "Sin lactosa", "Keto"]
         )
 
     with col2:
         observaciones = st.text_area(
             "📝 Información adicional",
-            placeholder="Entreno, horarios, preferencias...",
+            placeholder="Ej: entreno 4 días por semana, poco tiempo para cocinar...",
             height=180
         )
 
     prompt = f"""
 Eres un nutricionista profesional.
 
+Genera un plan nutricional claro y práctico.
+
 Objetivo: {objetivo}
 Nivel de implicación: {implicacion}/3
 Alergias: {', '.join(alergias) if alergias else 'Ninguna'}
-Observaciones: {observaciones if observaciones else 'Ninguna'}
+Restricciones: {', '.join(restricciones) if restricciones else 'Ninguna'}
+Observaciones adicionales: {observaciones if observaciones else 'Ninguna'}
 
-Genera un plan nutricional con:
+Incluye:
 - Menú orientativo
 - Calorías aproximadas
 - Consejos prácticos
 """
 
-    if st.button("✨ Generar plan"):
-        with st.spinner("🧠 Generando plan..."):
+    st.markdown("### 📄 Prompt generado automáticamente")
+    st.code(prompt)
+
+    if st.button("✨ Generar plan nutricional con IA"):
+        with st.spinner("🧠 Pensando como un nutricionista..."):
             respuesta = gemini_chat(prompt)
 
         st.success("✅ Plan generado")
         st.markdown(respuesta)
 
-        st.session_state.historial_planes.append({
-            "objetivo": objetivo,
-            "implicacion": implicacion,
-            "respuesta": respuesta
-        })
-
 # ======================================================
-# 📚 HISTORIAL
-# ======================================================
-elif seccion == "📚 Historial":
-    st.header("📚 Historial de planes")
-
-    if not st.session_state.historial_planes:
-        st.info("Aún no has generado ningún plan.")
-    else:
-        for i, plan in enumerate(reversed(st.session_state.historial_planes), 1):
-            with st.expander(f"📄 Plan {i} — {plan['objetivo']}"):
-                st.markdown(plan["respuesta"])
-
-# ======================================================
-# 🥗 MENÚS
-# ======================================================
-elif seccion == "🥗 Menús saludables":
-    st.header("🥗 Menús saludables")
-
-    desayuno, comida, cena = st.tabs(["🍳 Desayunos", "🍛 Comidas", "🍽️ Cenas"])
-
-    with desayuno:
-        st.write("- Avena con fruta\n- Yogur natural\n- Tostadas integrales")
-
-    with comida:
-        st.write("- Pollo con arroz\n- Lentejas\n- Pasta integral")
-
-    with cena:
-        st.write("- Pescado al horno\n- Tortilla\n- Verduras")
-
-# ======================================================
-# 💡 HÁBITOS
+# 💡 HÁBITOS SALUDABLES
 # ======================================================
 elif seccion == "💡 Hábitos saludables":
     st.header("💡 Hábitos saludables")
+    st.write("Pequeñas acciones diarias que mejoran tu salud.")
 
-    st.markdown("""
-    - 🏃 Muévete cada día  
-    - 💧 Hidratación constante  
-    - 😴 Dormir bien  
-    - 🧘 Reducir estrés  
-    """)
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.subheader("🏃 Actividad física")
+        st.markdown("""
+        - Caminar 30 min diarios  
+        - Entrenar fuerza 2-3 veces/semana  
+        - Estiramientos
+        """)
+
+    with col2:
+        st.subheader("💧 Hidratación")
+        st.markdown("""
+        - 1.5–2L de agua al día  
+        - Evitar refrescos  
+        - Agua antes de las comidas
+        """)
+
+    with col3:
+        st.subheader("😴 Descanso")
+        st.markdown("""
+        - Dormir 7–9 horas  
+        - Rutina de sueño  
+        - Evitar pantallas antes de dormir
+        """)
+
+    st.success("🌱 La constancia vale más que la perfección.")
 
 # ----------------------------------
 st.caption("NutriGen AI · Proyecto educativo · IA aplicada a la nutrición")
