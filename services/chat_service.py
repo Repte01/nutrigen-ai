@@ -1,5 +1,6 @@
 from services.supabase_client import supabase
 
+
 def save_chat(user_id: str, prompt: str, respuesta: str):
     supabase.table("chat_historial").insert({
         "user_id": user_id,
@@ -18,3 +19,9 @@ def get_chat_history(user_id: str):
         .execute()
     )
     return response.data
+
+
+def update_chat_title(chat_id: str, new_title: str):
+    supabase.table("chat_historial").update({
+        "titulo": new_title
+    }).eq("id", chat_id).execute()
