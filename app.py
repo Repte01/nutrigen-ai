@@ -3,7 +3,7 @@ from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
 
 # ----------------------------------
-# CONFIGURACIÓN + TEMA OSCURO
+# CONFIG + TEMA OSCURO
 # ----------------------------------
 st.set_page_config(
     page_title="NutriGen AI",
@@ -18,23 +18,32 @@ body {
     background-color: #0e1117;
     color: #fafafa;
 }
-.section-card {
+.metric-card {
     background-color: #161b22;
-    padding: 24px;
-    border-radius: 14px;
-    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
 }
-.section-title {
+.metric-title {
+    font-size: 14px;
+    color: #8b949e;
+}
+.metric-value {
+    font-size: 28px;
     color: #2ecc71;
+    font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ----------------------------------
-# ESTADO DE SESIÓN
+# ESTADO GLOBAL
 # ----------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+
+if "historial_planes" not in st.session_state:
+    st.session_state.historial_planes = []
 
 # ----------------------------------
 # LOGIN / REGISTRO
@@ -65,39 +74,81 @@ st.sidebar.title("📌 Secciones")
 seccion = st.sidebar.radio(
     "Ir a:",
     [
+        "📊 Dashboard",
         "🤖 Asistente IA",
+        "📚 Historial",
         "🥗 Menús saludables",
         "💡 Hábitos saludables"
     ]
 )
 
 # ======================================================
+# 📊 DASHBOARD
+# ======================================================
+if seccion == "📊 Dashboard":
+    st.header("📊 Tu progreso")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+        <div class="metric-card">
+            <div class="metric-title">Planes generados</div>
+            <div class="metric-value">{}</div>
+        </div>
+        """.format(len(st.session_state.historial_planes)), unsafe_allow_html=True)
+
+    with col2:
+        objetivo_actual = (
+            st.session_state.historial_planes[-1]["objetivo"]
+            if st.session_state.historial_planes else "—"
+        )
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Último objetivo</div>
+            <div class="metric-value">{objetivo_actual}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        nivel = (
+            st.session_state.historial_planes[-1]["implicacion"]
+            if st.session_state.historial_planes else "—"
+        )
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">Implicación</div>
+            <div class="metric-value">{nivel}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.divider()
+    st.info("📈 El progreso se basa en constancia y generación de planes.")
+
+# ======================================================
 # 🤖 ASISTENTE IA
 # ======================================================
-if seccion == "🤖 Asistente IA":
-    st.markdown("<h2 class='section-title'>🤖 Nutricionista con IA</h2>", unsafe_allow_html=True)
-    st.write("Configura tu plan nutricional de forma visual y personalizada.")
+elif seccion == "🤖 Asistente IA":
+    st.header("🤖 Nutricionista con IA")
 
     col1, col2 = st.columns(2)
 
     with col1:
         objetivo = st.selectbox(
-            "🎯 Objetivo principal",
+            "🎯 Objetivo",
             [
                 "Ganar masa muscular",
                 "Perder grasa",
                 "Mantener peso",
-                "Mejorar salud general",
+                "Mejorar salud",
                 "Rendimiento deportivo"
             ]
         )
 
         implicacion = st.slider(
             "⚖️ Nivel de implicación",
-            min_value=1,
-            max_value=3,
-            value=2,
-            help="1 = Flexible · 3 = Muy estricto"
+            1, 3, 2,
+            help="1 = flexible · 3 = muy estricto"
         )
 
         alergias = st.multiselect(
@@ -108,7 +159,7 @@ if seccion == "🤖 Asistente IA":
     with col2:
         observaciones = st.text_area(
             "📝 Información adicional",
-            placeholder="Entreno, horarios, preferencias, tiempo para cocinar...",
+            placeholder="Entreno, horarios, preferencias...",
             height=180
         )
 
@@ -126,82 +177,61 @@ Genera un plan nutricional con:
 - Consejos prácticos
 """
 
-    st.markdown("### 📄 Prompt generado automáticamente")
-    st.code(prompt)
-
-    if st.button("✨ Generar plan nutricional"):
+    if st.button("✨ Generar plan"):
         with st.spinner("🧠 Generando plan..."):
             respuesta = gemini_chat(prompt)
 
         st.success("✅ Plan generado")
         st.markdown(respuesta)
 
+        st.session_state.historial_planes.append({
+            "objetivo": objetivo,
+            "implicacion": implicacion,
+            "respuesta": respuesta
+        })
+
 # ======================================================
-# 🥗 MENÚS SALUDABLES
+# 📚 HISTORIAL
+# ======================================================
+elif seccion == "📚 Historial":
+    st.header("📚 Historial de planes")
+
+    if not st.session_state.historial_planes:
+        st.info("Aún no has generado ningún plan.")
+    else:
+        for i, plan in enumerate(reversed(st.session_state.historial_planes), 1):
+            with st.expander(f"📄 Plan {i} — {plan['objetivo']}"):
+                st.markdown(plan["respuesta"])
+
+# ======================================================
+# 🥗 MENÚS
 # ======================================================
 elif seccion == "🥗 Menús saludables":
-    st.markdown("<h2 class='section-title'>🥗 Menús saludables</h2>", unsafe_allow_html=True)
-    st.write("Ejemplos de menús equilibrados para el día a día.")
+    st.header("🥗 Menús saludables")
 
     desayuno, comida, cena = st.tabs(["🍳 Desayunos", "🍛 Comidas", "🍽️ Cenas"])
 
     with desayuno:
-        st.markdown("""
-        - Avena con fruta y yogur  
-        - Tostadas integrales con aceite de oliva  
-        - Huevos revueltos con fruta  
-        """)
+        st.write("- Avena con fruta\n- Yogur natural\n- Tostadas integrales")
 
     with comida:
-        st.markdown("""
-        - Pollo con arroz y verduras  
-        - Lentejas con verduras  
-        - Pasta integral con atún  
-        """)
+        st.write("- Pollo con arroz\n- Lentejas\n- Pasta integral")
 
     with cena:
-        st.markdown("""
-        - Pescado al horno con ensalada  
-        - Tortilla francesa con espinacas  
-        - Crema de verduras  
-        """)
-
-    st.info("💡 Ajusta cantidades según tu objetivo y actividad física.")
+        st.write("- Pescado al horno\n- Tortilla\n- Verduras")
 
 # ======================================================
-# 💡 HÁBITOS SALUDABLES
+# 💡 HÁBITOS
 # ======================================================
 elif seccion == "💡 Hábitos saludables":
-    st.markdown("<h2 class='section-title'>💡 Hábitos saludables</h2>", unsafe_allow_html=True)
-    st.write("Pequeñas acciones diarias que mejoran tu salud.")
+    st.header("💡 Hábitos saludables")
 
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.subheader("🏃 Movimiento")
-        st.markdown("""
-        - Caminar 30 min diarios  
-        - Entrenar fuerza  
-        - Estiramientos  
-        """)
-
-    with col2:
-        st.subheader("💧 Hidratación")
-        st.markdown("""
-        - 1.5–2L de agua  
-        - Evitar refrescos  
-        - Beber antes de comer  
-        """)
-
-    with col3:
-        st.subheader("😴 Descanso")
-        st.markdown("""
-        - Dormir 7–9 horas  
-        - Rutina regular  
-        - Menos pantallas  
-        """)
-
-    st.success("🌱 La constancia vale más que la perfección.")
+    st.markdown("""
+    - 🏃 Muévete cada día  
+    - 💧 Hidratación constante  
+    - 😴 Dormir bien  
+    - 🧘 Reducir estrés  
+    """)
 
 # ----------------------------------
 st.caption("NutriGen AI · Proyecto educativo · IA aplicada a la nutrición")
