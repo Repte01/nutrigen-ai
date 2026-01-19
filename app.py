@@ -2,7 +2,6 @@ import streamlit as st
 from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
 from services.chat_service import save_chat, get_chat_history
-from datetime import datetime
 
 # ----------------------------------
 # Configuración
@@ -129,6 +128,7 @@ elif seccion == "🤖 Asistente IA":
             min_value=1,
             max_value=3,
             value=2,
+            format="%d",
             help="1 = Poco estricto · 3 = Muy estricto"
         )
 
@@ -182,7 +182,7 @@ Incluye:
         st.success("✅ Plan generado")
         st.markdown(respuesta)
 
-    # -------- HISTORIAL --------
+    # -------- HISTORIAL DE CHATS --------
     st.divider()
     st.subheader("🕒 Historial de conversaciones")
 
@@ -192,11 +192,7 @@ Incluye:
         st.info("Aún no tienes conversaciones guardadas.")
     else:
         for chat in historial:
-            fecha = datetime.fromisoformat(chat["created_at"]).strftime("%d/%m/%Y %H:%M")
-            titulo = chat.get("title") or f"Conversación del {fecha}"
-
-            with st.expander(f"💬 {titulo}"):
-                st.caption(f"🗓 {fecha}")
+            with st.expander(f"🗓 {chat['created_at']}"):
                 st.markdown("**🧑 Prompt enviado:**")
                 st.code(chat["prompt"])
                 st.markdown("**🤖 Respuesta IA:**")
