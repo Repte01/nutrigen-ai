@@ -59,85 +59,49 @@ seccion = st.sidebar.radio(
 # ======================================================
 if seccion == "🥗 Menús saludables":
     st.header("🥗 Menús saludables")
-    st.write(
-        "Ejemplos de menús equilibrados, fáciles de preparar y adaptables "
-        "a diferentes objetivos nutricionales."
-    )
-
-    st.divider()
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("🔥 Calorías diarias", "1.800 – 2.200 kcal")
-    col2.metric("🥩 Proteínas", "20–30%")
-    col3.metric("🥦 Verduras", "En cada comida")
-
-    st.divider()
+    st.write("Ejemplos de menús equilibrados para el día a día.")
 
     desayuno, comida, cena = st.tabs(["🍳 Desayunos", "🍛 Comidas", "🍽️ Cenas"])
 
     with desayuno:
-        st.subheader("🍳 Desayunos equilibrados")
         st.table({
-            "Opción": [
-                "Avena con fruta y semillas",
-                "Tostadas integrales con aguacate",
-                "Yogur natural con frutos rojos",
-                "Huevos revueltos con verduras"
-            ],
+            "Opción": ["Avena con fruta", "Tostadas integrales", "Yogur natural"],
             "Beneficio": [
                 "Energía sostenida",
-                "Grasas saludables",
-                "Salud digestiva",
-                "Alta saciedad"
+                "Rico en fibra",
+                "Salud digestiva"
             ]
         })
 
-        st.info("💡 Consejo: prioriza proteína por la mañana para controlar el apetito.")
-
     with comida:
-        st.subheader("🍛 Comidas principales")
         st.table({
             "Plato": [
-                "Pollo con arroz integral y verduras",
+                "Pollo con arroz y verduras",
                 "Lentejas con verduras",
-                "Pasta integral con atún",
-                "Quinoa con salmón"
+                "Pasta integral con atún"
             ],
             "Aporte principal": [
                 "Proteína + carbohidratos",
                 "Proteína vegetal",
-                "Energía y saciedad",
-                "Omega 3 y proteína"
+                "Energía y saciedad"
             ]
         })
 
-        with st.expander("📌 Ideas rápidas para llevar"):
-            st.markdown("""
-            - Ensalada de garbanzos con huevo duro  
-            - Arroz integral con pollo al horno  
-            - Wrap integral de pavo y verduras  
-            """)
-
     with cena:
-        st.subheader("🍽️ Cenas ligeras")
         st.table({
-            "Cena": [
+            "Cena ligera": [
                 "Pescado al horno con ensalada",
                 "Tortilla francesa con espinacas",
-                "Crema de verduras",
-                "Requesón con frutos secos"
+                "Crema de verduras"
             ],
             "Ideal para": [
                 "Recuperación muscular",
                 "Cena rápida",
-                "Digestión ligera",
-                "Proteína nocturna"
+                "Digestión ligera"
             ]
         })
 
-        st.warning("⚠️ Evita cenas muy copiosas o ricas en azúcares simples.")
-
-    st.success("✅ Un buen menú no es perfecto, es sostenible.")
+    st.info("💡 Consejo: ajusta las cantidades según tu objetivo y nivel de actividad.")
 
 # ======================================================
 # 🤖 ASISTENTE IA
@@ -219,6 +183,7 @@ Incluye:
         st.success("✅ Plan generado")
         st.markdown(respuesta)
 
+    # -------- HISTORIAL DE CHATS --------
     st.divider()
     st.subheader("🕒 Historial de conversaciones")
 
@@ -231,6 +196,7 @@ Incluye:
             titulo = chat.get("titulo") or "Plan nutricional"
 
             with st.expander(f"🗂 {titulo} · {chat['created_at']}"):
+
                 nuevo_titulo = st.text_input(
                     "✏️ Renombrar conversación",
                     value=titulo,
@@ -265,52 +231,32 @@ Incluye:
 # ======================================================
 elif seccion == "💡 Hábitos saludables":
     st.header("💡 Hábitos saludables")
-    st.write(
-        "Pequeñas acciones diarias que, mantenidas en el tiempo, "
-        "marcan una gran diferencia en tu salud."
-    )
-
-    st.divider()
+    st.write("Pequeñas acciones diarias que mejoran tu salud.")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
         st.subheader("🏃 Actividad física")
         st.markdown("""
-        - Caminar 8.000–10.000 pasos/día  
-        - Fuerza 2–3 veces/semana  
-        - Cardio moderado  
-        - Movilidad y estiramientos
+        - Caminar 30 min diarios  
+        - Entrenar fuerza 2-3 veces/semana  
+        - Estiramientos
         """)
 
     with col2:
-        st.subheader("💧 Hidratación y nutrición")
+        st.subheader("💧 Hidratación")
         st.markdown("""
-        - 1.5–2L de agua diarios  
-        - Priorizar comida real  
-        - Fruta y verdura diaria  
-        - Evitar ultraprocesados
+        - 1.5–2L de agua al día  
+        - Evitar refrescos  
+        - Agua antes de las comidas
         """)
 
     with col3:
-        st.subheader("😴 Descanso y mente")
+        st.subheader("😴 Descanso")
         st.markdown("""
         - Dormir 7–9 horas  
-        - Rutina de sueño estable  
-        - Menos pantallas de noche  
-        - Gestión del estrés
-        """)
-
-    with st.expander("📆 Rutina saludable semanal"):
-        st.markdown("""
-        **Lunes–Viernes**
-        - Movimiento diario  
-        - Comidas regulares  
-        - Hidratación constante  
-
-        **Fin de semana**
-        - Descanso activo  
-        - Flexibilidad sin culpa  
+        - Rutina de sueño  
+        - Evitar pantallas antes de dormir
         """)
 
     st.success("🌱 La constancia vale más que la perfección.")
