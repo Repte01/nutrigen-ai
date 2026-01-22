@@ -3,7 +3,6 @@ from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
 from services.chat_service import save_chat, get_chat_history, update_chat_title
 from services.pdf_reader_service import pdf_to_text
-from services.pdf_chat_service import save_pdf_chat, get_pdf_chat_history
 
 # ----------------------------------
 # Configuración
@@ -264,13 +263,6 @@ Responde claramente a la siguiente pregunta:
 """
 
             respuesta = gemini_chat(prompt)
-
-            save_pdf_chat(
-                user_id=st.session_state.user.id,
-                pdf_name=st.session_state.pdf_name,
-                pregunta=pregunta,
-                respuesta=respuesta
-            )
 
             st.markdown(respuesta)
 
