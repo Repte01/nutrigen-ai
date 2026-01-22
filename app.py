@@ -218,7 +218,7 @@ Incluye:
         for chat in historial:
             titulo = chat.get("titulo") or "Plan nutricional"
 
-            with st.expander(f"🗂 {titulo} · {chat['created_at']}"):
+            with st.expander(f"🗂 {titulo}"):
                 nuevo_titulo = st.text_input(
                     "✏️ Renombrar conversación",
                     value=titulo,
