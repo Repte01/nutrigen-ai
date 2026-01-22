@@ -117,33 +117,45 @@ if seccion == "🥗 Menús saludables":
 # ======================================================
 elif seccion == "🤖 Asistente IA":
     st.header("🤖 Nutricionista con IA")
-    st.write("Configura tu plan nutricional de forma visual y personalizada.")
+    st.write("Plan nutricional personalizado basado en tus datos y objetivos reales.")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        objetivo = st.selectbox(
-            "🎯 Objetivo principal",
+        objetivos = st.multiselect(
+            "🎯 Objetivos nutricionales",
             [
-                "Ganar masa muscular",
                 "Perder grasa",
+                "Ganar masa muscular",
+                "Ganar peso",
                 "Mantener peso",
                 "Mejorar salud general",
                 "Rendimiento deportivo"
-            ]
+            ],
+            help="Puedes seleccionar más de un objetivo"
         )
+
+        edad = st.number_input("🎂 Edad", min_value=10, max_value=100, value=25)
+
+        sexo = st.selectbox(
+            "⚧ Género",
+            ["Hombre", "Mujer", "Otro / Prefiero no decirlo"]
+        )
+
+        peso = st.number_input("⚖️ Peso (kg)", min_value=30.0, max_value=200.0, value=70.0)
+
+        altura = st.number_input("📏 Altura (cm)", min_value=120, max_value=230, value=170)
 
         implicacion = st.slider(
             "⚖️ Nivel de implicación",
             min_value=1,
             max_value=3,
             value=2,
-            format="%d",
             help="1 = Poco estricto · 3 = Muy estricto"
         )
 
         alergias = st.multiselect(
-            "🚫 Alergias",
+            "🚫 Alergias alimentarias",
             ["Nueces", "Gluten", "Lactosa", "Huevo", "Marisco"]
         )
 
@@ -156,31 +168,35 @@ elif seccion == "🤖 Asistente IA":
         observaciones = st.text_area(
             "📝 Información adicional",
             placeholder="Ej: entreno 4 días por semana, poco tiempo para cocinar...",
-            height=180
+            height=220
         )
 
+    objetivos_texto = ", ".join(objetivos) if objetivos else "No especificados"
+
     prompt = f"""
-Eres un nutricionista profesional.
+Actúas como NutriGen AI, un nutricionista digital especializado en planes personalizados.
 
-Genera un plan nutricional claro y práctico.
+Datos del usuario:
+- Edad: {edad} años
+- Género: {sexo}
+- Peso: {peso} kg
+- Altura: {altura} cm
 
-Objetivo: {objetivo}
+Objetivos nutricionales: {objetivos_texto}
 Nivel de implicación: {implicacion}/3
-Alergias: {', '.join(alergias) if alergias else 'Ninguna'}
-Restricciones: {', '.join(restricciones) if restricciones else 'Ninguna'}
+Alergias alimentarias: {', '.join(alergias) if alergias else 'Ninguna'}
+Restricciones alimentarias: {', '.join(restricciones) if restricciones else 'Ninguna'}
 Observaciones adicionales: {observaciones if observaciones else 'Ninguna'}
 
+Genera un plan nutricional específico y realista.
 Incluye:
-- Menú orientativo
+- Menú semanal en formato tabla (Lunes a Domingo)
 - Calorías aproximadas
-- Consejos prácticos
+- Consejos prácticos adaptados al nivel de implicación
 """
 
-    st.markdown("### 📄 Prompt generado automáticamente")
-    st.code(prompt)
-
     if st.button("✨ Generar plan nutricional con IA"):
-        with st.spinner("🧠 Pensando como un nutricionista..."):
+        with st.spinner("🧠 Generando plan personalizado..."):
             respuesta = gemini_chat(prompt)
 
             save_chat(
@@ -205,7 +221,6 @@ Incluye:
             titulo = chat.get("titulo") or "Plan nutricional"
 
             with st.expander(f"🗂 {titulo} · {chat['created_at']}"):
-
                 nuevo_titulo = st.text_input(
                     "✏️ Renombrar conversación",
                     value=titulo,
@@ -217,23 +232,7 @@ Incluye:
                     st.success("✅ Nombre actualizado")
                     st.rerun()
 
-                st.markdown("**🧑 Prompt enviado:**")
-                st.code(chat["prompt"])
-
-                st.markdown("**🤖 Respuesta IA:**")
                 st.markdown(chat["respuesta"])
-
-                pdf_buffer = generar_pdf_chat(
-                    prompt=chat["prompt"],
-                    respuesta=chat["respuesta"]
-                )
-
-                st.download_button(
-                    label="📄 Exportar a PDF",
-                    data=pdf_buffer,
-                    file_name=f"nutrigen_plan_{chat['created_at']}.pdf",
-                    mime="application/pdf"
-                )
 
 # ======================================================
 # 📄 ANALIZAR MENÚ PDF
@@ -242,10 +241,7 @@ elif seccion == "📄 Analizar menú PDF":
     st.header("📄 Analizar menú nutricional en PDF")
     st.write("Sube un menú en PDF y haz preguntas sobre su contenido.")
 
-    uploaded_pdf = st.file_uploader(
-        "📎 Subir menú nutricional (PDF)",
-        type=["pdf"]
-    )
+    uploaded_pdf = st.file_uploader("📎 Subir menú nutricional (PDF)", type=["pdf"])
 
     if uploaded_pdf:
         st.session_state.pdf_name = uploaded_pdf.name
@@ -256,48 +252,28 @@ elif seccion == "📄 Analizar menú PDF":
 
         st.success(f"✅ PDF cargado: {st.session_state.pdf_name}")
 
-        pregunta = st.text_input(
-            "❓ Haz una pregunta sobre el menú",
-            placeholder="Ej: ¿Hay alimentos con gluten?"
-        )
+        pregunta = st.text_input("❓ Haz una pregunta sobre el menú")
 
         if st.button("🤖 Preguntar a la IA") and pregunta:
-            with st.spinner("🧠 Analizando el menú..."):
-                prompt = f"""
-Este es un menú nutricional en formato texto:
+            prompt = f"""
+Este es un menú nutricional:
 
 {st.session_state.pdf_text}
 
-Responde de forma clara y concisa a la siguiente pregunta:
+Responde claramente a la siguiente pregunta:
 {pregunta}
 """
 
-                respuesta = gemini_chat(prompt)
+            respuesta = gemini_chat(prompt)
 
-                save_pdf_chat(
-                    user_id=st.session_state.user.id,
-                    pdf_name=st.session_state.pdf_name,
-                    pregunta=pregunta,
-                    respuesta=respuesta
-                )
+            save_pdf_chat(
+                user_id=st.session_state.user.id,
+                pdf_name=st.session_state.pdf_name,
+                pregunta=pregunta,
+                respuesta=respuesta
+            )
 
-            st.markdown("### 🤖 Respuesta de la IA")
             st.markdown(respuesta)
-
-        st.divider()
-        st.subheader("🕒 Historial de preguntas de este PDF")
-
-        historial_pdf = get_pdf_chat_history(
-            st.session_state.user.id,
-            st.session_state.pdf_name
-        )
-
-        if not historial_pdf:
-            st.info("Aún no hay preguntas guardadas para este PDF.")
-        else:
-            for chat in historial_pdf:
-                with st.expander(f"❓ {chat['pregunta']}"):
-                    st.markdown(chat["respuesta"])
 
 # ======================================================
 # 💡 HÁBITOS SALUDABLES
@@ -310,27 +286,15 @@ elif seccion == "💡 Hábitos saludables":
 
     with col1:
         st.subheader("🏃 Actividad física")
-        st.markdown("""
-        - Caminar 30 min diarios  
-        - Entrenar fuerza 2-3 veces/semana  
-        - Estiramientos
-        """)
+        st.markdown("- Caminar 30 min diarios\n- Entrenar fuerza 2-3 veces/semana")
 
     with col2:
         st.subheader("💧 Hidratación")
-        st.markdown("""
-        - 1.5–2L de agua al día  
-        - Evitar refrescos  
-        - Agua antes de las comidas
-        """)
+        st.markdown("- 1.5–2L de agua al día\n- Evitar refrescos")
 
     with col3:
         st.subheader("😴 Descanso")
-        st.markdown("""
-        - Dormir 7–9 horas  
-        - Rutina de sueño  
-        - Evitar pantallas antes de dormir
-        """)
+        st.markdown("- Dormir 7–9 horas\n- Rutina de sueño")
 
     st.success("🌱 La constancia vale más que la perfección.")
 
