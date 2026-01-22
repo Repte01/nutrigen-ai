@@ -244,6 +244,7 @@ Incluye:
                     data=pdf_buffer,
                     file_name=f"nutrigen_chat_{chat['created_at']}.pdf",
                     mime="application/pdf"
+                    key=f"pdf_{chat['id']}"
                 )
 
 # ======================================================
