@@ -3,6 +3,8 @@ from auth.login import login_form, register_form, logout
 from services.gemini_client import gemini_chat
 from services.chat_service import save_chat, get_chat_history, update_chat_title
 from services.pdf_service import generar_pdf_chat
+from services.pdf_reader_service import pdf_to_text
+from services.pdf_chat_service import save_pdf_chat, get_pdf_chat_history
 
 # ----------------------------------
 # Configuración
@@ -18,6 +20,12 @@ st.set_page_config(
 # ----------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+
+if "pdf_text" not in st.session_state:
+    st.session_state.pdf_text = None
+
+if "pdf_name" not in st.session_state:
+    st.session_state.pdf_name = None
 
 # ----------------------------------
 # LOGIN / REGISTRO
@@ -50,6 +58,7 @@ seccion = st.sidebar.radio(
     [
         "🥗 Menús saludables",
         "🤖 Asistente IA",
+        "📄 Analizar menú PDF",
         "💡 Hábitos saludables"
     ]
 )
@@ -225,6 +234,70 @@ Incluye:
                     file_name=f"nutrigen_plan_{chat['created_at']}.pdf",
                     mime="application/pdf"
                 )
+
+# ======================================================
+# 📄 ANALIZAR MENÚ PDF
+# ======================================================
+elif seccion == "📄 Analizar menú PDF":
+    st.header("📄 Analizar menú nutricional en PDF")
+    st.write("Sube un menú en PDF y haz preguntas sobre su contenido.")
+
+    uploaded_pdf = st.file_uploader(
+        "📎 Subir menú nutricional (PDF)",
+        type=["pdf"]
+    )
+
+    if uploaded_pdf:
+        st.session_state.pdf_name = uploaded_pdf.name
+
+        if st.session_state.pdf_text is None:
+            with st.spinner("📄 Analizando el PDF..."):
+                st.session_state.pdf_text = pdf_to_text(uploaded_pdf)
+
+        st.success(f"✅ PDF cargado: {st.session_state.pdf_name}")
+
+        pregunta = st.text_input(
+            "❓ Haz una pregunta sobre el menú",
+            placeholder="Ej: ¿Hay alimentos con gluten?"
+        )
+
+        if st.button("🤖 Preguntar a la IA") and pregunta:
+            with st.spinner("🧠 Analizando el menú..."):
+                prompt = f"""
+Este es un menú nutricional en formato texto:
+
+{st.session_state.pdf_text}
+
+Responde de forma clara y concisa a la siguiente pregunta:
+{pregunta}
+"""
+
+                respuesta = gemini_chat(prompt)
+
+                save_pdf_chat(
+                    user_id=st.session_state.user.id,
+                    pdf_name=st.session_state.pdf_name,
+                    pregunta=pregunta,
+                    respuesta=respuesta
+                )
+
+            st.markdown("### 🤖 Respuesta de la IA")
+            st.markdown(respuesta)
+
+        st.divider()
+        st.subheader("🕒 Historial de preguntas de este PDF")
+
+        historial_pdf = get_pdf_chat_history(
+            st.session_state.user.id,
+            st.session_state.pdf_name
+        )
+
+        if not historial_pdf:
+            st.info("Aún no hay preguntas guardadas para este PDF.")
+        else:
+            for chat in historial_pdf:
+                with st.expander(f"❓ {chat['pregunta']}"):
+                    st.markdown(chat["respuesta"])
 
 # ======================================================
 # 💡 HÁBITOS SALUDABLES
