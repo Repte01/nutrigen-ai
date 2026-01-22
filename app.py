@@ -192,7 +192,7 @@ Incluye:
 - Calorías aproximadas
 - Consejos prácticos adaptados al nivel de implicación
 
-Para las cantidades, no uses ni tazas, ni cucharadas, ni vasos. En cambio, usa cantidades reales casi exactas.
+Para las cantidades, no uses ni tazas, ni cucharadas, ni vasos. En su lugar, usa cantidades reales casi exactas.
 """
 
     if st.button("✨ Generar plan nutricional con IA"):
