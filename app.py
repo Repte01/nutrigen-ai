@@ -233,6 +233,18 @@ Incluye:
                     st.rerun()
 
                 st.markdown(chat["respuesta"])
+                
+                pdf_buffer = generar_pdf_chat(
+                    prompt=chat["prompt"],
+                    respuesta=chat["respuesta"]
+                )
+
+                st.download_button(
+                    label="📄 Exportar a PDF",
+                    data=pdf_buffer,
+                    file_name=f"nutrigen_chat_{chat['created_at']}.pdf",
+                    mime="application/pdf"
+                )
 
 # ======================================================
 # 📄 ANALIZAR MENÚ PDF
