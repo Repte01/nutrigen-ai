@@ -4,3 +4,4 @@ supabase
 python-dotenv
 google-genai
 reportlab
+PyPDF2
