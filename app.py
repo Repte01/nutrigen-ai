@@ -166,7 +166,7 @@ elif seccion == "🤖 Asistente IA":
         observaciones = st.text_area(
             "📝 Información adicional",
             placeholder="Ej: entreno 4 días por semana, poco tiempo para cocinar...",
-            height=790
+            height=220
         )
 
     objetivos_texto = ", ".join(objetivos) if objetivos else "No especificados"
